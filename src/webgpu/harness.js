@@ -1,6 +1,7 @@
 // Benchmark/accuracy harness: every scene x mode x spp, vs the CPU reference.
 import { accumToXYZ, compareImages, exposureFromRef, toCSV } from "./metrics.js";
 import { MODES } from "./renderer.js";
+import { checkAccumCounts, checkReference, scoringMask } from "./checks.js";
 
 const SEED = 1234;
 
@@ -12,8 +13,10 @@ export async function save(name, body) {
   try { const r = await fetch(`save/${name}`, { method: "POST", body }); return r.ok; } catch { return false; }
 }
 
-export async function runHarness(r, { sppList = [1, 4, 16, 64, 1024], modes = [0, 1, 2], scenes = null,
-  saveImagesAt = [64, 1024], log = console.log } = {}) {
+export async function runHarness(r, { sppList = [1, 4, 16, 64], modes = [0, 1, 2], scenes = null,
+  saveImagesAt = [64], imageOnlySpp = 1024, minRefSpp = 8192, log = console.log } = {}) {
+  let lost = null;
+  r.device.lost.then((i) => { lost = i; });
   const sc = r.scene, white = sc.white_xyz;
   const out = { meta: { date: new Date().toISOString(), userAgent: navigator.userAgent,
     adapter: { vendor: r.info.vendor, architecture: r.info.architecture, device: r.info.device, description: r.info.description },
@@ -24,8 +27,12 @@ export async function runHarness(r, { sppList = [1, 4, 16, 64, 1024], modes = [0
   for (const scene of scenes || Object.keys(sc.scenes)) {
     r.setScene(scene);
     const ref = await fetchF32(`data/ref_${scene}_xyz.bin`);
-    const mask = await fetchU8(`data/ref_${scene}_mask.bin`);
-    const k = exposureFromRef(ref, mask);
+    const emitter = await fetchU8(`data/ref_${scene}_mask.bin`);
+    const refMeta = await fetch(`data/ref_${scene}_meta.json`).then((x) => (x.ok ? x.json() : null));
+    checkReference(ref, emitter, refMeta, r.res, minRefSpp);         // refuses placeholder/unfinished refs
+    (out.meta.references ||= {})[scene] = refMeta;
+    const k = exposureFromRef(ref, emitter);                          // exposure: unchanged definition
+    const mask = scoringMask(ref, emitter);                           // metrics: exclude emitter + black misses
     for (const mode of modes) {
       await r.render(mode, 4, 99);                              // warm-up (pipeline, caches)
       for (const spp of sppList) {
@@ -39,6 +46,8 @@ export async function runHarness(r, { sppList = [1, 4, 16, 64, 1024], modes = [0
           dispatches: ts[0].dispatches, gpuMin: r.hasTimestamps ? Math.min(...ts.map((x) => x.gpuMs)) : null,
           gpuMax: r.hasTimestamps ? Math.max(...ts.map((x) => x.gpuMs)) : null, reps };
         const acc = await r.readAccum();
+        if (lost) throw new Error(`GPU device lost: ${lost.message}`);
+        checkAccumCounts(acc, spp);                                       // every pixel has exactly spp samples
         const xyz = accumToXYZ(acc, mode, sc.rgb2xyz);
         const m = compareImages(xyz, ref, mask, k, white);
         const row = { scene, mode: MODES[mode], spp, gpu_ms: t.gpuMs, wall_ms: t.wallMs,
@@ -50,6 +59,16 @@ export async function runHarness(r, { sppList = [1, 4, 16, 64, 1024], modes = [0
         log(`${scene} ${MODES[mode]} spp=${spp} gpu=${t.gpuMs?.toFixed(1)}ms wall=${t.wallMs.toFixed(1)}ms dE=${m.meanDE.toFixed(3)} rmse=${m.rmse.toFixed(4)}`);
         if (saveImagesAt.includes(spp)) await save(`${scene}_${MODES[mode]}_${spp}spp_xyz.bin`, xyz);
         r.display(2, k);
+      }
+      if (imageOnlySpp) {   // converged image for the side-by-side figures only (not timed, not in the tables)
+        await r.render(mode, imageOnlySpp, SEED);
+        const acc = await r.readAccum();
+        checkAccumCounts(acc, imageOnlySpp);
+        const xyz = accumToXYZ(acc, mode, sc.rgb2xyz);
+        const m = compareImages(xyz, ref, mask, k, white);
+        out.imageOnly = out.imageOnly || [];
+        out.imageOnly.push({ scene, mode: MODES[mode], spp: imageOnlySpp, mean_dE00: m.meanDE, rmse: m.rmse });
+        await save(`${scene}_${MODES[mode]}_${imageOnlySpp}spp_xyz.bin`, xyz);
       }
     }
   }

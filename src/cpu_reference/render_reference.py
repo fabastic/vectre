@@ -96,6 +96,10 @@ def main():
                             nw=a.nw, seconds=dt, exposure=k)
         xyz.astype("<f4").tofile(DATA / f"ref_{name}_xyz.bin")
         mask.astype(np.uint8).tofile(DATA / f"ref_{name}_mask.bin")
+        import hashlib
+        (DATA / f"ref_{name}_meta.json").write_text(json.dumps({
+            "scene": name, "res": int(res), "spp": int(a.spp), "nw": int(a.nw), "seconds": float(dt),
+            "exposure": float(k), "xyz_sha256": hashlib.sha256((DATA / f"ref_{name}_xyz.bin").read_bytes()).hexdigest()}, indent=1))
         plt.imsave(OUT / f"ref_{name}_srgb.png", to_srgb8(xyz, k, xyz2rgb))
         # half-vs-half noise estimate (relative RMSE of Y on non-emitter pixels)
         m = mask == 0

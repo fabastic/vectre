@@ -1,0 +1,9 @@
+{
+ "scene": "cornell_d65",
+ "res": 512,
+ "spp": 8192,
+ "nw": 8,
+ "seconds": 500.46478629112244,
+ "exposure": 334.82815534078844,
+ "xyz_sha256": "07f111e8f69c8da5e6aa574ac9a2b88271f76aa81930f32d78c00650c6e2aa18"
+}

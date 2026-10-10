@@ -58,7 +58,7 @@ def main():
     lines = [f"Adapter: {res['meta']['adapter']}; timestamp-query: {res['meta']['timestampQuery']}; "
              f"{res['meta']['resolution']}² px; max bounces {res['meta']['maxBounces']}; {res['meta']['timing_note']}.", ""]
     for s in scenes:
-        lines.append(f"\n**{s}**: mean ΔE00 / RMSE vs CPU reference (non-emitter pixels)\n")
+        lines.append(f"\n**{s}**: mean ΔE00 / RMSE vs CPU reference (emitter and background pixels excluded)\n")
         lines.append("| mode | " + " | ".join(f"{p} spp" for p in spps) + " |")
         lines.append("|---|" + "---|" * len(spps))
         for m in MODES:
@@ -82,8 +82,10 @@ def main():
     # per first-hit material: where does each mode fail? (converged, max spp)
     mat_map = first_hit_materials(scene_js)
     names = [m["name"] for m in scene_js["materials"]]
-    smax = max(spps)
-    lines.append(f"\n**Mean ΔE00 by first-hit surface at {smax} spp** (bias-dominated; light/emitter excluded)\n")
+    # Use the converged image-only 1024-spp GPU renders if present (bias, not noise).
+    smax = 1024 if (GPU / f"{scenes[0]}_rgb_1024spp_xyz.bin").exists() else max(spps)
+    lines.append(f"\n**Mean ΔE00 by first-hit surface at {smax} spp** (GPU image-only render; "
+                 "emitter and background excluded)\n")
     lines.append("| scene | mode | " + " | ".join(names) + " |")
     lines.append("|---|---|" + "---|" * len(names))
     for s in scenes:
@@ -130,10 +132,11 @@ def main():
                 X = np.fromfile(f, "<f4").reshape(H, H, 3).astype(np.float64)
                 axs[0, j].imshow(to_srgb8(X, k, xyz2rgb))
                 de = delta_e_2000(lab_ref, xyz_to_lab(torch.tensor(X * k).reshape(-1, 3), white)).reshape(H, H).numpy()
-                de[ref["mask"] == 1] = 0
+                excl = (ref["mask"] == 1) | (R.sum(-1) == 0)          # emitter + background, as in the JS metrics
+                de[excl] = 0
                 axs[0, j].set_title(f"WebGPU {LABEL[m]}, {spp} spp")
                 im = axs[1, j].imshow(de, vmin=0, vmax=10, cmap="magma")
-                axs[1, j].set_title(f"ΔE00 vs reference (mean {de[ref['mask'] == 0].mean():.2f})")
+                axs[1, j].set_title(f"ΔE00 vs reference (mean {de[~excl].mean():.2f})")
             fm = GPU / f"{s}_hero4_measured_{spp}spp_xyz.bin"
             if fm.exists():
                 Xm = np.fromfile(fm, "<f4").reshape(H, H, 3).astype(np.float64)

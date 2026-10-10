@@ -1,0 +1,9 @@
+{
+ "scene": "cornell_nb610",
+ "res": 512,
+ "spp": 8192,
+ "nw": 8,
+ "seconds": 463.16453790664673,
+ "exposure": 282.60511238339706,
+ "xyz_sha256": "fe429f1749a98c26fbcab2078bdec8f941b352e496a1c8cfa135b2c712bd7e46"
+}

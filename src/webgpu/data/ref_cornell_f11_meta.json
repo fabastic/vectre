@@ -1,0 +1,9 @@
+{
+ "scene": "cornell_f11",
+ "res": 512,
+ "spp": 8192,
+ "nw": 8,
+ "seconds": 565.0249660015106,
+ "exposure": 335.60397192944276,
+ "xyz_sha256": "041918ea7e27e25a6ea62e54be43da5ecf603acb1743fb21f0855685081896f3"
+}

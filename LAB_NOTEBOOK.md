@@ -223,6 +223,32 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
   candidate contributions (P for packaging/measurement, not method).
 * Spectral Cycles: confirmed not in Blender 5.0 release notes; devtalk thread active (last post 2026-10-10).
 
+## 2026-10-10: Phase 2 benchmark integrity and results
+
+* **32.573 investigation:** not reproducible. The saved run and three fresh runs give 3.770
+  (nb610 RGB, 1024 spp); a Python recomputation agrees; the references are byte-identical to the
+  converged `.npz` files. The value appears in no saved artifact. Server logs show the only run made
+  while the CPU references were still rendering (21:31) aborted at F11. **Root cause not determined.** (E)
+* **Guards added** (`src/webgpu/checks.js`, `tests/js/checks.test.mjs`): every pixel's sample count must
+  equal spp; abort on GPU device loss; refuse references whose metadata (`ref_<scene>_meta.json`,
+  now written by `render_reference.py`) reports < 8192 spp or the wrong resolution. (E)
+* **RNG seeding fixed:** XOR combination `pcg(pix ^ pcg(s ^ pcg(seed)))` made 27 of 1024 samples
+  reuse pixel-permuted streams (correlated noise across pixels, no bias). Replaced by the injective
+  `pcg(pcg(seed) + s·res² + pix)`. The Node test fails on the old scheme and passes on the new one. (S fix)
+* **Metric change:** background-miss pixels (13.6%, black in both images) are now excluded from
+  ΔE/RMSE; they diluted the means. The exposure definition is unchanged. (E)
+* **All earlier benchmark numbers discarded**; a clean full run was made after the fixes.
+* **Benchmark:** spp 1/4/16/64, 5 timing repeats (median, min–max), plus an untimed 1024-spp render per
+  mode used only for converged images and the per-surface table. (E)
+* **GPU:** Intel iGPU only. The RTX 4060 could not be selected from here: it needs a Windows graphics
+  setting (a system change I didn't make). Documented in NEXT_STEPS.md. (E)
+* **Findings:**
+  * Hero-4λ costs +24–35% GPU time (16–64 spp) and +12.8% buffer memory (the LUT).
+  * It is noisier than RGB at equal spp under broadband light, mostly chroma noise.
+  * It clearly wins under the 610 nm line (converged 0.80 vs 4.37) and partly under F11 (1.91 vs 2.58),
+    where the J&H uplift error dominates (measured-spectra mode 0.71).
+  * These are known techniques; nothing here is claimed as new.
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).

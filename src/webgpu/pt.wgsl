@@ -169,7 +169,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   let pix = gid.y * P.res + gid.x;
   var acc = vec3f(0.0);
   for (var s = 0u; s < P.spp_chunk; s++) {
-    rng = pcg(pix ^ pcg((P.sample_base + s) ^ pcg(P.seed)));
+    // Injective (sample, pixel) -> u32 index, then the bijective PCG hash: every (sample, pixel)
+    // gets a distinct initial state for up to 2^32 / res^2 samples (16384 spp at 512^2).
+    // (Replaced an XOR combination that made 27 of 1024 sample streams pixel-permuted copies.)
+    rng = pcg(pcg(P.seed) + (P.sample_base + s) * P.res * P.res + pix);
     var wl = vec4u(0u); var ww = vec4f(0.0);
     if (P.mode != 0u) {
       let u0 = rnd();

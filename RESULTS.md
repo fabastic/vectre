@@ -518,3 +518,253 @@ sampling, and there was no real memory advantage to begin with.**
 | log PCA K=8 | 0.24 [0.22] | 0.39 [0.25] | 0.61 [0.19] | 0.78 [0.06] |
 | (5 nm grid, uncompressed) | 0.04 [0.04] | 0.07 [0.04] | 0.10 [0.02] | 0.13 [0.00] |
 | hero4, light-aware pdf (1 / 16 / 256 spp), n=1 | 3.77 / 0.85 / 0.22 | | | |
+
+---
+
+# Phase 2 (2026-10-10): tonemapper control, CPU reference, WebGPU RGB vs hero-4λ
+
+## Task 0: tonemapper check
+
+**Formulas** (`src/tonemap.py`; the identical WGSL is in `src/webgpu/display.wgsl`). Input is scene-linear sRGB (D65 white) after exposure:
+* **per-channel Reinhard** (Phase 1.5): y_c = x_c⁺ / (1 + x_c⁺), x⁺ = max(x, 0).
+* **max-RGB (hue-preserving)**: x⁺ = max(x, 0); m = max_c x⁺_c; y = x⁺ · (m/(1+m)) / m = x⁺ / (1+m).
+  Channel *ratios* are kept exactly. Out-of-gamut input is handled only by the negative clip.
+* **Oklch (chroma-preserving)**: Y = luminance(x); Y′ = Y/(1+Y); (L, C, h) = Oklch(x) with a signed cube
+  root; L′ = Y′^(1/3); C′ = C·L′/L; back to linear sRGB; if outside [0,1]³, C′ is reduced by
+  bisection at constant L′ and h. Oklab is Ottosson (2020); the constants are verified against
+  colour-science and against the numerical inverse in tests.
+
+Same samples as Phase 1.5 (held-out Munsell, 1 nm truth). Chroma is CIELAB C*ab with the D65
+white. |Δh| is the mean absolute hue difference from the **scene-linear** truth hue, for samples
+with scene chroma > 10. Full table (1x/10x/100x, both chain types): `results/tonemap_check_table.md`.
+
+| light | samples | intensity | tonemap | C* truth | C* RGB | RGB/truth chroma | |Δh| truth (°) | |Δh| RGB (°) | ΔE00 RGB vs truth |
+|---|---|---|---|---|---|---|---|---|---|
+| D65 | single | 1x | reinhard_channel | 16.5 | 16.5 | 1.00 | 2.1 | 2.1 | 0.00 |
+| D65 | single | 1x | maxrgb | 18.9 | 18.9 | 1.00 | 0.0 | 0.0 | 0.00 |
+| D65 | single | 1x | oklch | 19.4 | 19.4 | 1.00 | 0.0 | 0.0 | 0.00 |
+| D65 | single | 100x | reinhard_channel | 5.3 | 5.3 | 1.00 | 12.2 | 12.2 | 0.00 |
+| D65 | single | 100x | maxrgb | 31.0 | 31.0 | 1.00 | 0.0 | 0.0 | 0.00 |
+| D65 | single | 100x | oklch | 6.8 | 6.8 | 1.00 | 1.9 | 1.9 | 0.00 |
+| D65 | self | 1x | reinhard_channel | 15.0 | 15.9 | 1.06 | 2.9 | 7.0 | 1.72 |
+| D65 | self | 1x | maxrgb | 15.2 | 16.3 | 1.07 | 2.9 | 7.8 | 1.72 |
+| D65 | self | 1x | oklch | 14.0 | 16.3 | 1.17 | 1.8 | 7.8 | 2.37 |
+| D65 | self | 100x | reinhard_channel | 39.9 | 36.4 | 0.91 | 16.4 | 11.4 | 4.07 |
+| D65 | self | 100x | maxrgb | 48.8 | 49.7 | 1.02 | 4.9 | 8.5 | 3.56 |
+| D65 | self | 100x | oklch | 32.2 | 32.5 | 1.01 | 5.3 | 8.7 | 4.32 |
+| NB610 | single | 1x | reinhard_channel | 81.7 | 78.1 | 0.96 | 7.6 | 9.1 | 2.57 |
+| NB610 | single | 1x | maxrgb | 81.7 | 78.1 | 0.96 | 7.6 | 9.1 | 2.57 |
+| NB610 | single | 1x | oklch | 75.5 | 67.8 | 0.90 | 6.5 | 10.0 | 5.18 |
+| NB610 | single | 100x | reinhard_channel | 104.1 | 100.8 | 0.97 | 7.2 | 8.3 | 1.63 |
+| NB610 | single | 100x | maxrgb | 104.1 | 100.8 | 0.97 | 7.2 | 8.3 | 1.63 |
+| NB610 | single | 100x | oklch | 3.5 | 6.1 | 1.74 | 10.7 | 13.2 | 5.14 |
+| NB610 | self | 1x | reinhard_channel | 28.3 | 29.8 | 1.05 | 3.5 | 4.1 | 2.28 |
+| NB610 | self | 1x | maxrgb | 28.3 | 29.8 | 1.05 | 3.5 | 4.1 | 2.28 |
+| NB610 | self | 1x | oklch | 26.9 | 28.0 | 1.04 | 2.1 | 7.1 | 3.96 |
+| NB610 | self | 100x | reinhard_channel | 70.6 | 67.8 | 0.96 | 8.8 | 8.7 | 3.67 |
+| NB610 | self | 100x | maxrgb | 70.6 | 67.8 | 0.96 | 8.8 | 8.7 | 3.67 |
+| NB610 | self | 100x | oklch | 31.4 | 23.8 | 0.76 | 9.6 | 12.9 | 8.67 |
+| NEONLIKE | single | 1x | reinhard_channel | 75.7 | 73.3 | 0.97 | 6.6 | 10.6 | 3.86 |
+| NEONLIKE | single | 1x | maxrgb | 77.8 | 75.1 | 0.97 | 8.6 | 12.2 | 3.35 |
+| NEONLIKE | single | 1x | oklch | 74.1 | 67.7 | 0.91 | 5.9 | 11.1 | 5.71 |
+| NEONLIKE | single | 100x | reinhard_channel | 90.1 | 86.1 | 0.95 | 30.7 | 36.3 | 10.26 |
+| NEONLIKE | single | 100x | maxrgb | 101.3 | 100.8 | 0.99 | 8.2 | 11.5 | 4.10 |
+| NEONLIKE | single | 100x | oklch | 3.8 | 6.9 | 1.83 | 9.7 | 13.9 | 4.11 |
+| NEONLIKE | self | 1x | reinhard_channel | 27.0 | 28.4 | 1.05 | 4.3 | 7.4 | 2.64 |
+| NEONLIKE | self | 1x | maxrgb | 27.3 | 28.6 | 1.05 | 4.9 | 7.8 | 2.59 |
+| NEONLIKE | self | 1x | oklch | 25.4 | 27.5 | 1.08 | 2.2 | 11.4 | 4.31 |
+| NEONLIKE | self | 100x | reinhard_channel | 64.1 | 63.6 | 0.99 | 22.5 | 20.7 | 8.75 |
+| NEONLIKE | self | 100x | maxrgb | 68.6 | 68.5 | 1.00 | 9.3 | 11.6 | 6.24 |
+| NEONLIKE | self | 100x | oklch | 30.2 | 27.8 | 0.92 | 9.1 | 16.0 | 9.03 |
+
+**Plain answer: once the tonemapper is controlled for, there is no RGB-specific loss of colour
+purity.** With the hue-preserving max-RGB operator, RGB's displayed chroma is 0.96–1.07x the
+spectral truth's in every case tested (D65, the 610 nm line and neon-like; 1x/10x/100x). What
+remains is ordinary colour error:
+* **hue:** RGB's mean hue error relative to the scene truth is up to 4.9° larger than the truth's own
+  display hue error (D65 self-products: 7.8° vs 2.9°; neon-like: up to +3.6°; one 610 nm case:
+  0.3° smaller);
+* **total:** ΔE00 RGB vs truth after max-RGB tonemapping is 0 (D65 single surfaces, exact by
+  construction) to 6.2 (neon-like self-products at 100x).
+
+The tonemappers themselves differ a lot:
+* **Per-channel Reinhard** shifts hue (|Δh| up to 31° for neon-like at 100x) and desaturates.
+* **max-RGB** keeps hue (0° under D65) and keeps chroma.
+* **Oklch** keeps hue but must drop chroma at high luminance (C* falls to 3–7 at 100x for both
+  truth and RGB), because bright saturated colours do not fit the display gamut near white.
+* Under the 610 nm line, even the truth shows |Δh| ≈ 7° with max-RGB. That comes from clipping
+  the out-of-gamut negative channels, not from RGB rendering.
+
+**max-RGB is now the default display tonemap** (Phase 2 harness and demo).
+
+## Phase 2 setup (all run and verified on this machine, 2026-10-10)
+
+* **Scene**: Cornell-like box, all Lambertian. Walls and spheres use **measured** CIE 224:2017 CES
+  spectra (CC BY-SA 4.0): white, red, green, blue, yellow, magenta. One quad light, three spheres.
+  Three light variants: CIE D65, CIE F11, and a synthetic 610 nm line (FWHM 5 nm). Integrator:
+  ≤ 5 scattering vertices, NEE, no Russian roulette. It is identical on CPU and GPU.
+* **CPU reference** (`src/cpu_reference/`, Python + Numba): 1 nm spectral, 8192 spp, 512². Tests
+  passed: white furnace (exact), analytic point-to-rectangle form factor (NEE within 0.5%), NEE
+  vs pure path tracing, sampled vs full 401-wavelength integration. Half-split noise is 0.004–0.005
+  relative to white.
+* **WebGPU** (`src/webgpu/`, WGSL + plain JS). Modes:
+  * **RGB**: sRGB albedo under D65; light = linear sRGB of its XYZ, negatives kept.
+  * **hero-4λ**: Wilkie et al. 2014, with a Jakob & Hanika 2019 sigmoid-polynomial uplift of the same
+    sRGB albedo (own 32³ LUT generator; the BSD-3 `rgb2spec` was not used) and light-aware wavelength
+    sampling with pdf ∝ (x̄+ȳ+z̄)·E. These are known techniques; Peters' 2025 tracer does the same (see SURVEY.md).
+  * **measured-spectra validation** mode: the GPU path tracer fed the true spectra, to test the
+    renderer itself.
+* **GPU used: Intel integrated GPU (Chrome adapter `intel / gen-12lp`). The RTX 4060 was NOT
+  measured.** Chrome ignored `powerPreference: "high-performance"`. Switching needs a Windows
+  graphics setting, which I did not change (see NEXT_STEPS.md).
+* **Metrics**: mean CIEDE2000 and RMSE (XYZ, white = 1) vs the CPU reference. Same exposure
+  everywhere (reference median Y → 18). Emitter and background-miss pixels are excluded. Frame time is
+  the GPU timestamp-query sum over dispatches, as a median (min–max) of 5 identical renders. Memory is
+  the bytes of buffers each mode reads.
+
+### Suspicious 1024-spp number (nb610 RGB: 32.573): investigation
+
+* **Not reproducible.** The saved run (22:38) and three fresh runs all give **3.770** at 1024 spp
+  (Python recomputation from the saved image agrees to 3 decimals), with every pixel's sample count
+  correct and no device loss.
+* The browser reference files are byte-identical to the converged `.npz` files.
+* The value appears in no saved file. Renders are deterministic, and the 1–64 spp values you quoted
+  match exactly, so it came from a run whose 1024-spp output was later overwritten.
+* The server log shows four benchmark runs. The 21:31 run was the only one made while the CPU
+  references were still rendering. It stopped at F11 (that reference did not exist yet) without saving.
+  The nb610 reference had been final since 21:28, so a placeholder reference is unlikely.
+  **Root cause: not determined.**
+* Hypotheses checked:
+
+| hypothesis | finding |
+|---|---|
+| unfinished/placeholder reference | ruled out for every run after 21:28; the harness now refuses references without metadata reporting ≥ 8192 spp at full resolution |
+| float32 accumulation / overflow | ruled out at 1024 spp (finite values, correct counts, matches Python) |
+| RNG seed reuse/correlation | **real flaw found, but it cannot cause a 10x error.** XOR seeding made 27 of 1024 samples reuse pixel-permuted streams (correlated noise across pixels, no bias). Fixed with an injective seed; test added |
+| exposure/tonemap mismatch | ruled out (same exposure code path; Python recomputation agrees) |
+| harness bug at high spp (buffers, loops, timeouts) | not reproduced. Guards added: per-pixel sample count must equal spp, abort on device loss, reference validation |
+
+* **All earlier benchmark numbers are discarded**; the tables below are from the clean run after these fixes.
+* The fix also changed one metric: background-miss pixels (13.6% of the image, black in both) used
+  to be counted, which diluted the means; they are now excluded.
+
+### Accuracy vs spp (Intel iGPU run; full JSON/CSV: `results/phase2_benchmark_intel_igpu.{json,csv}`)
+
+**cornell_d65**: mean ΔE00 / RMSE vs CPU reference (emitter and background pixels excluded)
+
+| mode | 1 spp | 4 spp | 16 spp | 64 spp |
+|---|---|---|---|---|
+| RGB | 12.88 / 0.4976 | 7.24 / 0.2245 | 3.77 / 0.1233 | 1.97 / 0.0595 |
+| hero-4λ + J&H uplift | 18.27 / 0.5192 | 10.65 / 0.2566 | 5.76 / 0.1300 | 3.00 / 0.0699 |
+| hero-4λ, measured spectra (validation) | 17.80 / 0.5191 | 10.61 / 0.2565 | 5.76 / 0.1300 | 2.97 / 0.0699 |
+
+**cornell_nb610**: mean ΔE00 / RMSE vs CPU reference (emitter and background pixels excluded)
+
+| mode | 1 spp | 4 spp | 16 spp | 64 spp |
+|---|---|---|---|---|
+| RGB | 13.15 / 0.5070 | 7.89 / 0.2405 | 5.65 / 0.1364 | 4.77 / 0.0899 |
+| hero-4λ + J&H uplift | 11.02 / 0.5624 | 5.29 / 0.2776 | 2.72 / 0.1441 | 1.53 / 0.0777 |
+| hero-4λ, measured spectra (validation) | 10.93 / 0.5623 | 5.14 / 0.2774 | 2.52 / 0.1437 | 1.25 / 0.0770 |
+
+**cornell_f11**: mean ΔE00 / RMSE vs CPU reference (emitter and background pixels excluded)
+
+| mode | 1 spp | 4 spp | 16 spp | 64 spp |
+|---|---|---|---|---|
+| RGB | 12.90 / 0.4156 | 7.46 / 0.1927 | 4.52 / 0.1026 | 3.24 / 0.0581 |
+| hero-4λ + J&H uplift | 17.33 / 0.4786 | 10.10 / 0.2346 | 5.64 / 0.1220 | 3.34 / 0.0651 |
+| hero-4λ, measured spectra (validation) | 17.48 / 0.4781 | 10.08 / 0.2342 | 5.34 / 0.1218 | 2.72 / 0.0649 |
+
+
+
+**Converged GPU renders (1024 spp, image-only, not timed)**: mean ΔE00 / RMSE vs reference. These show bias, not noise.
+
+| scene | RGB | hero-4λ + J&H | hero-4λ, measured spectra (validation) |
+|---|---|---|---|
+| D65 | 0.74 / 0.0151 | 0.95 / 0.0164 | 0.78 / 0.0163 |
+| 610 nm line | **4.37 / 0.0607** | 0.80 / 0.0197 | 0.33 / 0.0166 |
+| F11 | **2.58 / 0.0192** | 1.91 / 0.0148 | 0.71 / 0.0141 |
+
+* **Renderer validation:** the measured-spectra mode converges to the CPU reference (0.33–0.78 at
+  1024 spp, still falling with spp), so the GPU path tracer agrees with the independent CPU code.
+* **Uplift error:** the gap between hero-4λ + J&H and measured spectra is the Jakob–Hanika uplift error.
+  It is small under D65 (0.17) but large under F11 (1.20), where the blue, red and magenta materials
+  reach 3.5–3.9 per surface. The uplift only matches colour under D65; under a spiky light the guessed
+  spectrum's metamerism shows.
+
+![error vs spp](results/figures/phase2_error_vs_spp.png)
+
+### Frame time and memory (Intel iGPU `gen-12lp`; RTX 4060 not measured)
+
+GPU ms per frame at N spp (median of 5; hero-4λ overhead over RGB in brackets):
+
+| scene | 1 spp RGB / hero-4λ | 4 spp | 16 spp | 64 spp |
+|---|---|---|---|---|
+| D65 | 5.8 / 9.2 (+58%) | 11.1 / 18.7 (+69%) | 45.9 / 60.6 (+32%) | 175.4 / 234.5 (+34%) |
+| 610 nm | 4.7 / 8.7 (+85%) | 13.0 / 17.2 (+32%) | 44.3 / 59.8 (+35%) | 182.4 / 225.3 (+24%) |
+| F11 | 6.9 / 7.1 (+3%) | 15.0 / 18.9 (+26%) | 45.5 / 60.4 (+33%) | 178.6 / 231.8 (+30%) |
+
+* **Steady-state overhead** (16–64 spp, where timing is stable) is **+24% to +35%**: about 2.8 ms/spp
+  for RGB vs 3.6 ms/spp for hero-4λ at 512².
+* At 1–4 spp the iGPU timings are noisy: the min–max ranges in `results/phase2/phase2_tables.md`
+  span up to 3x, so the 1-spp percentages are unreliable.
+* **Memory:** RGB mode reads 4,195,008 B; hero-4λ + J&H reads 4,732,128 B (**+537,120 B, +12.8%**).
+  Almost all of that is the 32³ coefficient LUT (524,288 B), plus 401-entry CMF and light tables.
+  The per-pixel accumulation buffer is the same (16 B/px).
+* Caveat: one shared kernel with a uniform mode branch. RGB mode still carries 4-lane throughput
+  (one unused lane), so a dedicated RGB kernel might be slightly faster than measured.
+
+### Where RGB fails: mean ΔE00 per first-hit surface (1024 spp, converged)
+
+| scene | mode | white | red | green | blue | yellow | magenta |
+|---|---|---|---|---|---|---|---|
+| D65 | RGB | 0.93 | 0.39 | 0.41 | 1.32 | 0.98 | 0.64 |
+| D65 | hero-4λ + J&H | 1.21 | 0.65 | 0.48 | 1.16 | 0.75 | 1.07 |
+| D65 | measured (validation) | 1.08 | 0.33 | 0.44 | 0.52 | 0.67 | 0.55 |
+| 610 nm | RGB | 1.71 | **9.85** | **4.88** | **9.18** | **6.55** | 3.76 |
+| 610 nm | hero-4λ + J&H | 0.41 | 1.37 | 0.60 | 3.61 | 0.54 | 1.57 |
+| 610 nm | measured (validation) | 0.36 | 0.25 | 0.22 | 0.21 | 0.43 | 0.47 |
+| F11 | RGB | 1.75 | 2.90 | 2.52 | **10.21** | 4.05 | 3.45 |
+| F11 | hero-4λ + J&H | 1.53 | 3.45 | 0.97 | 3.92 | 0.99 | 3.75 |
+| F11 | measured (validation) | 0.91 | 0.32 | 0.54 | 0.56 | 0.73 | 0.50 |
+
+### Side-by-side images (max-RGB hue-preserving tonemap, same exposure; bottom row = ΔE00 maps)
+
+![D65](results/figures/phase2_cornell_d65_compare_1024spp.png)
+![610 nm](results/figures/phase2_cornell_nb610_compare_1024spp.png)
+![F11](results/figures/phase2_cornell_f11_compare_1024spp.png)
+
+64-spp versions: `results/figures/phase2_<scene>_compare_64spp.png`.
+
+**What the images show:**
+* **F11:** RGB is visibly wrong. The blue sphere turns cyan-blue (the reference is violet-blue) and the
+  yellow sphere shifts toward orange. Hero-4λ + J&H is much closer but not perfect: the blue sphere is
+  slightly off, and the red wall and magenta sphere show uplift error in the ΔE map.
+* **610 nm line:** every image is monochrome red, so RGB cannot show a *hue* error. Its error is in
+  *lightness*: the red wall, blue sphere and yellow sphere are too bright or too dark. This is visible
+  side by side but subtle; the ΔE map (≥ 10 on those surfaces) shows it far more clearly than the image.
+* **D65:** no visible difference between any of the modes.
+
+### Noise at low spp (equal spp)
+
+* **Broadband lights:** hero-4λ is noisier than RGB at equal spp. Under D65, ΔE00 is 18.3 vs 12.9
+  at 1 spp and 10.7 vs 7.2 at 4 spp; under F11, 17.3 vs 12.9 and 10.1 vs 7.5. RMSE differs much less
+  (0.519 vs 0.498 at 1 spp under D65), so the extra noise is mostly **chroma** noise from wavelength
+  sampling.
+* **610 nm line:** hero-4λ is *better* already at 1 spp (11.0 vs 13.2), because light-aware sampling
+  makes the spectral estimate nearly noise-free for a single line, while RGB is biased.
+* **Crossover:** at 64 spp, hero-4λ beats RGB clearly under the 610 nm line (1.53 vs 4.77), roughly
+  ties under F11 (3.34 vs 3.24), and is worse under D65 (3.00 vs 1.97), where RGB has almost no bias.
+
+### Run and verified here vs. still to run on your machine
+
+* **Run and verified here:**
+  * Task 0 tonemap check.
+  * CPU reference and its tests.
+  * WGSL compilation (Chrome, no messages).
+  * Python and Node tests.
+  * The full benchmark (3 scenes × 3 modes × 1/4/16/64 spp × 5 timing repeats) on the **Intel iGPU**.
+  * Per-surface table and images.
+* **Not run here / must be run on your machine:**
+  * Any **RTX 4060** (or other discrete GPU) timing. Chrome must be switched to the high-performance
+    GPU; see NEXT_STEPS.md.
+  * Runs in other browsers.
