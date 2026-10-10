@@ -1,0 +1,8 @@
+# CPU wheels are sufficient (datasets are ~10^3 spectra x 81 bands).
+# torch: pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.4
+numpy>=2.0
+scipy>=1.13
+matplotlib>=3.9
+# Used ONLY in tests as an independent cross-check of our colorimetry.
+colour-science>=0.4.4

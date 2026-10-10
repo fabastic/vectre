@@ -1,0 +1,42 @@
+{
+  "3": {
+    "tensor_max_abs_err": 5.960532161175536e-07,
+    "color_xyz_max_abs_err": 8.193776338316638e-06,
+    "log_decode_max_abs_err": 2.1809426808960808e-07
+  },
+  "4": {
+    "tensor_max_abs_err": 7.132508628160394e-07,
+    "color_xyz_max_abs_err": 1.11204098232065e-05,
+    "log_decode_max_abs_err": 2.2674376953801811e-07
+  },
+  "5": {
+    "tensor_max_abs_err": 1.1173577187939543e-06,
+    "color_xyz_max_abs_err": 9.842406711868534e-06,
+    "log_decode_max_abs_err": 2.384806062627476e-07
+  },
+  "6": {
+    "tensor_max_abs_err": 1.2306215873003623e-06,
+    "color_xyz_max_abs_err": 1.3063490840181657e-05,
+    "log_decode_max_abs_err": 3.154404790706167e-07
+  },
+  "7": {
+    "tensor_max_abs_err": 1.4497401390478615e-06,
+    "color_xyz_max_abs_err": 1.4532654432741765e-05,
+    "log_decode_max_abs_err": 2.789123593194276e-07
+  },
+  "8": {
+    "tensor_max_abs_err": 1.9183069874806336e-06,
+    "color_xyz_max_abs_err": 1.502750954784915e-05,
+    "log_decode_max_abs_err": 2.906222776877243e-07
+  },
+  "9": {
+    "tensor_max_abs_err": 2.351952629098264e-06,
+    "color_xyz_max_abs_err": 1.5271572607389317e-05,
+    "log_decode_max_abs_err": 2.9850488614258097e-07
+  },
+  "10": {
+    "tensor_max_abs_err": 2.495768928856279e-06,
+    "color_xyz_max_abs_err": 1.681125996810806e-05,
+    "log_decode_max_abs_err": 3.3208332794743e-07
+  }
+}

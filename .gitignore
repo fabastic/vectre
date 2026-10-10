@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+# Raw and processed datasets are NOT committed: Munsell (UEF) grants no
+# commercial licence and ECOSTRESS is "All rights reserved" (Caltech/JPL).
+# Re-fetch with `python src/fetch_data.py`; see data/README.md.
+data/raw/
+data/processed/

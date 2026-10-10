@@ -1,0 +1,52 @@
+{
+  "grid_nm": [
+    380.0,
+    780.0,
+    5.0
+  ],
+  "edge_ext_nm_used": 0.0,
+  "datasets": {
+    "munsell": {
+      "loaded": 1269,
+      "coverage_strict": {
+        "ok": 1269
+      },
+      "coverage_edge_ext_20nm": {
+        "ok": 1269
+      },
+      "range_before_clip": {
+        "min": 0.03041904761904762,
+        "max": 0.8390357142857143,
+        "n_spectra_with_any_value_lt_0": 0,
+        "n_spectra_with_any_value_gt_1": 0,
+        "max_abs_clip_amount": 0.0
+      },
+      "kept": 1269,
+      "train": 1022,
+      "test": 247,
+      "groups_train": 32,
+      "groups_test": 8
+    },
+    "ecostress": {
+      "loaded": 0,
+      "rejected_on_load": {},
+      "coverage_strict": {},
+      "coverage_edge_ext_20nm": {}
+    }
+  },
+  "munsell_test_hue_pages": [
+    "10B",
+    "10YR",
+    "2.5GY",
+    "2.5P",
+    "5G",
+    "5RP",
+    "7.5BG",
+    "7.5R"
+  ],
+  "total": {
+    "kept": 1269,
+    "train": 1022,
+    "test": 247
+  }
+}
