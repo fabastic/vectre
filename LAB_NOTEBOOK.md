@@ -267,6 +267,27 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
 * Gap (d) wording updated: Vectre's browser measurement exists only privately and only on the Intel
   iGPU.
 
+## 2026-10-11: patent-track experiment (branch `patent-track`)
+
+* **Pre-registration first:** PREREG.md (commit db78ebc) fixed the hypothesis, the pass rule (≥ 30%
+  lower mean ΔE00 than light-aware hero-4λ at 1 and 4 spp under D65, F11 and 610 nm; > 2 SD paired
+  improvement over 5 seeds; ≤ 10% time, ≤ 25% memory), the candidates and a feasibility gate before
+  any result. (E)
+* **Prior art** (PRIORART.md, 12 queries):
+  * (b) deterministic low-dim throughput with a cheap decode is published (Drew & Finlayson 2003;
+    Waddle 2013); dropped.
+  * (c) 8λ is published (Wilkie 2014). Cross-pixel stratification cannot change the per-pixel metric.
+  * (a) log-PCA + per-light XYZ map is "unclear" (known parts).
+* **Gate:** CPU oracle carrying all 401 wavelengths on the same paths vs hero-4λ (the CPU emulation
+  reproduces the GPU numbers). Oracle gain: D65 29.6% / 32.1%, F11 28.7% / 31.8%, 610 nm 0.4% / 0.4%
+  (1 / 4 spp). **The gate fails in 4 of 6 conditions, so FAIL.** Stopped as pre-registered; nothing
+  built, no GPU timings. (E)
+* **Interpretation:** at 1 spp the residual is geometric noise (oracle ≈ RGB); under the 610 nm line
+  light-aware hero-4λ is already spectrally near-exact. The rule may have been unreachable by
+  design; I noted this in PATENT_TRACK.md and kept the verdict.
+* Statement recorded: "not enough to take to a patent attorney" (measurements and search results only,
+  not a legal opinion).
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).
