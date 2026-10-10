@@ -1,6 +1,6 @@
 # Survey: open spectral-rendering work, and where Vectre could fill gaps
 
-Date: 2026-10-10. Method: web search plus page fetches, with licences and last-activity dates
+Date: 2026-10-10, updated 2026-10-11 (category 8, gap e, indicatrix found). Method: web search plus page fetches, with licences and last-activity dates
 from the GitHub API (`license.spdx_id`, `pushed_at`) where a repo exists. "Not verified" means I
 couldn't confirm it this session. "None found in N searches" is a search result, not proof of
 absence. No code was copied, nothing was run, and nobody was contacted.
@@ -42,19 +42,20 @@ Fourier sRGB (Peters), spectral primaries (Mallett & Yuksel).
 | cybr-light-public | github.com/cybrdelic/cybr-light-public | native spectral renderer + WebGPU **RGB** path tracer | native spectral; browser part RGB | GPL-2.0 | 2026-10-09 | browser part RGB |
 | strahl (ZHAW) | github.com/StuckiSimon/strahl | WebGPU OpenPBR path tracer | RGB (described as physically based; no spectral claim found) | MIT | 2025-12-01 | yes |
 | three-gpu-pathtracer | github.com/gkjohnson/three-gpu-pathtracer | Three.js path tracer | RGB | MIT | 2026-10-08 | yes |
-| "indicatrix-web" | – | gem rendering (named in the brief) | – | – | – | none found in 2 searches |
+| indicatrix (incl. `apps/indicatrix-web`) | github.com/suitable-name/indicatrix | spectral path tracer for faceted gemstones: 8-channel hero-wavelength sampling, Stokes–Mueller polarisation, Sellmeier dispersion; desktop GPU kernels (WGSL port) verified against a CPU reference. The **browser build** (Slint → WebAssembly) renders on the **CPU in Web Workers**; per its README there is no GPU path in the browser | spectral | MIT (per README / Cargo.toml) | created 2026-09-08, push 2026-10-09 | yes (CPU/WASM) |
 
-Plainly: **few exist.** I found no general-purpose 3D spectral path tracer in the browser that
-renders coloured materials under arbitrary measured illuminants (3 web searches + 2 GitHub
-searches). What exists is dispersion-focused (Caustify, the 2D tracer, luma.gl caustics) or
-not verified.
+Plainly: **few exist.** I found no general-purpose 3D spectral path tracer *on the GPU in the
+browser* that renders coloured materials under arbitrary measured illuminants (3 web searches + 3
+GitHub searches). What exists is dispersion/gem-focused (indicatrix-web on CPU/WASM, Caustify, the 2D
+tracer, luma.gl caustics) or not verified. The earlier "indicatrix-web: none found" was wrong; a GitHub
+repository search for "indicatrix" found it on 2026-10-11.
 
 ## 3. Blender
 
 | item | status | source |
 |---|---|---|
 | Spectral Cycles in official Blender | **not merged, confirmed.** The Blender 5.0 Cycles release notes contain no mention of spectral rendering | developer.blender.org/docs/release_notes/5.0/cycles/ |
-| "Thoughts on making Cycles into a spectral renderer" devtalk thread | **active**: 2,016 posts, created 2018-09-21, last post 2026-10-10 (Discourse API) | devtalk.blender.org/t/2192 |
+| "Thoughts on making Cycles into a spectral renderer" devtalk thread | **active**: 2,016 posts, created 2018-09-21, last post 2026-10-10 (Discourse API, re-checked 2026-10-11) | devtalk.blender.org/t/2192 |
 | Spectral Cycles branch features (4 wavelengths/ray, OSL unsupported, merge targeted at "4.x") | reported in thread posts. Current state and any merge timeline are **unconfirmed / rumoured** | same thread |
 | Mitsuba Blender add-on | exists, active (push 2026-09-23), BSD-3-Clause. Whether it exposes Mitsuba's spectral variants: not verified | github.com/mitsuba-renderer/mitsuba-blender |
 
@@ -109,6 +110,37 @@ light: **none found in 2 searches.**
 | LuxCoreRender forum spectral threads | threads seen date from ~2020; current activity not verified |
 | r/GraphicsProgramming, Discord servers | not verified (Reddit fetch blocked; search does not index Discord) |
 
+## 8. Uplift metamerism error under non-D65 lights
+
+Motivation: in Vectre Phase 2, under F11 the J&H uplift, not the renderer, was the largest error
+(converged ΔE 1.91 with uplifted colours vs 0.71 with measured spectra).
+
+| item | URL | what it does about non-D65 metamerism | code / licence | date |
+|---|---|---|---|---|
+| Jakob & Hanika 2019 | diglib.eg.org/handle/10.1111/cgf13626 | fits a smooth sigmoid-quadratic per colour so the colour matches under the fit illuminant (D65 for sRGB); no control of behaviour under other lights | rgb2spec, BSD-3-Clause | 2019 |
+| Otsu, Yamamoto & Hachisuka 2018 | CGF 37(6) | data-driven (PCA of measured reflectances, clustered), so reconstructions follow real-spectrum statistics | colour-science `XYZ_to_sd_Otsu2018` (takes an illuminant), BSD-3-Clause | 2018 |
+| Meng, Simon & Hanika 2015 | (paper) | optimisation-based uplift | colour-science `XYZ_to_sd_Meng2015` (takes an illuminant), BSD-3-Clause | 2015 |
+| Peters et al. 2019 (moments) | (TOG 2019) | moment representation of bounded signals; per a secondary source, used for reflectances in recent Manuka | reference code not verified | 2019 |
+| Tódová, Wilkie & Fascione: Moment-based Constrained Spectral Uplifting | cgg.mff.cuni.cz/publications/moment-based-constrained-spectral-uplifting (DOI 10.2312/sr.20211304) | constrains the uplift to reproduce chosen measured spectra exactly, so nearby colours fall in the same metameric family; the paper's example reproduces real Munsell metameric shifts under FL12 | code not verified | EGSR 2021 |
+| Tódová et al.: Wide Gamut Moment-based Constrained Spectral Uplifting | diglib.eg.org/handle/10.1111/cgf14617 | extends the constraints beyond sRGB to any realisable reflectance | code not verified | CGF 2022 |
+| Tódová & Wilkie: Constrained Spectral Uplifting for HDR Environment Maps | cgg.mff.cuni.cz/?p=2897 | uplifts HDR environment maps using measured light-source spectra (illuminant-side uplift) | code not verified | 2025 |
+| van de Ruit & Eisemann: Metameric (SIGGRAPH 2023) | graphics.tudelft.nl/Publications-new/2023/RE23 (DOI 10.1145/3588432.3591565) | the artist specifies colour under *several* illuminants (e.g. D65 and A); constrained optimisation inside the metamer set, data-based for plausibility | github.com/Markvanderuit/metameric_dev, **GPL-3.0**, push 2025-09-17 | 2023 |
+| van de Ruit & Eisemann: Controlled Spectral Uplifting for Indirect-Light-Metamerism (SIGGRAPH Asia 2024) | graphics.tudelft.nl/Publications-new/2024/RE24 (DOI 10.1145/3680528.3687698) | constraints under direct *and indirect* light, using metamer mismatch volumes; compact spectral texture format | probably the same GPL-3.0 repo (not verified) | 2024 |
+| Belcour, Barla & Guennebaud: One-to-Many Spectral Upsampling (EGSR 2023) | arxiv.org/abs/2306.11464 | explores the whole set of spectra matching one colour (partition-of-unity basis), e.g. to create metamerism deliberately | code not verified | 2023 |
+| Jung et al. 2019 | cg.ivd.kit.edu/uplifting.php | wide-gamut uplift with fluorescence | not verified | 2019 |
+| Yu, Guarnera & Guarnera: Learned Spectral Codes for RGB Pipelines | arxiv.org/abs/2602.18741 (arXiv lists SIGGRAPH Asia 2026 / TOG 45(6)) | **measures** reflectance-upsampling ΔE2000 on 218 held-out reflectances under D65, LED-B1, LED-B3 and FL11 (their Table 5). Via their codec route, J&H gives mean 1.59 (D65) and 2.91 (FL11); their MLP upsampler gives 0.90 and 1.99 | paper CC BY 4.0; no code repository linked on arXiv | 2026 |
+| Metamer mismatch volume computation (arXiv 1901.08419) | arxiv.org/abs/1901.08419 | colour-science theory for how far metamers can diverge under another light (uses D65, A, F11) | n/a | 2019 |
+
+**What is well covered.** The *problem* is well known: uplift is one-to-many, and a fit under D65
+says nothing about F11. So is the *method space*: data priors (Otsu), measured-spectrum constraints
+(Tódová et al.), multi-illuminant artist constraints including indirect light (van de Ruit &
+Eisemann), deliberate one-to-many sampling (Belcour et al.) and learned upsamplers (Yu et al. 2026).
+
+**Less covered.** An open, reproducible *renderer-level* benchmark (scene renders, not per-patch
+colour) of uplift error under F-series, LED and narrow-band lights, with permissively licensed code.
+The only multi-illuminant ΔE numbers I found are per-reflectance (Yu et al. 2026), and the strongest
+constraint tool (Metameric) is GPL-3.0, which limits reuse in permissively licensed or web projects.
+
 ## Gaps (with evidence)
 
 **(a) Shared open test bench, RGB vs spectral, non-D65 lights, with reference renders: open gap,
@@ -126,28 +158,39 @@ generators exist (rgb2spec BSD-3 C++, rgb2spec-rs BSD-3 Rust CLI, colour-science
 solver), and Mallett–Yuksel needs no table. No JS/WASM generator was found (2 searches + GitHub
 search). The gap is packaging, not science.
 
-**(d) Measured spectral-vs-RGB cost on consumer GPUs, in the browser: open gap for the browser;
+**(d) Measured spectral-vs-RGB cost on consumer GPUs, in the browser: open gap publicly;
 covered natively.** Peters reports native timings on an RTX 5070 Ti at 1080p: spectral overhead
-≤ 0.3 ms, 2–36% depending on scene and path length. No browser/WebGPU measurement was found
-(2 searches). Vectre's own harness exists, but so far it has only run on an Intel iGPU, and the
-full benchmark has **not** been run.
+≤ 0.3 ms, 2–36% depending on scene and path length. No public browser/WebGPU measurement was found
+(2 searches). Vectre has now measured one, but **privately and only on an Intel iGPU**: hero-4λ costs
++24–35% GPU time at 16–64 spp and +12.8% buffer memory over RGB. No discrete-GPU (e.g. RTX 4060)
+browser numbers exist yet.
+
+**(e) Reducing uplift metamerism error under non-D65 lights: partly covered.** The research is
+substantial (category 8): constrained uplifting (Tódová et al. 2021/2022), multi-illuminant and
+indirect-light constraints (van de Ruit & Eisemann 2023/2024; GPL-3.0 code), one-to-many upsampling
+(Belcour et al. 2023), and learned upsamplers with ΔE numbers under FL11 and LEDs (Yu et al. 2026).
+What is missing is an open, permissively licensed, renderer-level benchmark and a drop-in tool for
+web renderers. No browser implementation of any constrained or multi-illuminant uplift was found
+(2 searches on upsampling benchmarks under A/F11/LED plus the GitHub search for Metameric).
 
 ## Recommended first releases (ranked)
 
-1. **Open RGB-vs-spectral test bench.** Cornell scene JSON, measured CIE 224 CES materials, CIE
-   D65/A/F-series + synthetic narrow-band lights, converged 1 nm CPU references, and verified ΔE00
-   metric code. This fills gap (a), and Vectre already has most of it (tested CPU reference: furnace,
-   analytic, NEE, full-spectrum checks). Release under CC BY-SA 4.0 because the CES and CIE data
-   require it. Exclude Munsell (UEF data has no commercial licence).
+1. **Open RGB-vs-spectral test bench, with an uplift-error track.** Cornell scene JSON, measured CIE
+   224 CES materials, CIE D65/A/F-series + synthetic narrow-band lights, converged 1 nm CPU references,
+   and verified ΔE00 metric code. Include Vectre's *three-way* comparison (RGB / uplifted spectral /
+   measured spectral), which separates renderer error from uplift error. That fills gap (a) and gives
+   gap (e) the renderer-level benchmark it lacks. Vectre already has all the parts (tested CPU
+   reference; WebGPU harness with integrity checks). Release under CC BY-SA 4.0 because the CES and CIE
+   data require it. Exclude Munsell (UEF data has no commercial licence).
 2. **Interactive "why RGB drifts" explainer page** built on the existing WebGPU demo. Swap the light
    (D65 → F11 → 610 nm line) and see RGB vs hero-4λ vs reference side by side, with the honest Phase
    1.5/2 findings, including that tonemapping, not RGB, caused the "purity collapse". This fills gap (b),
    for which nothing comparable was found.
 3. **Browser cost/accuracy benchmark (WebGPU timestamp queries) with a public results table.**
-   This fills gap (d), which Peters covers natively but not in the browser. Ranked third because it
-   needs runs on discrete GPUs first (current numbers: Intel iGPU only, full harness not yet run). A
-   JS/WASM J&H LUT generator (gap c) would be a small add-on to 1 or 3 rather than its own release,
-   since permissive native tools already exist.
+   This fills gap (d), which Peters covers natively but not in the browser. Ranked third because the
+   only numbers so far are from one Intel iGPU; runs on discrete GPUs (e.g. the RTX 4060) are needed
+   first. A JS/WASM J&H LUT generator (gap c) would be a small add-on to 1 or 3 rather than its own
+   release, since permissive native tools already exist.
 
 Honesty note: Vectre's Phase 2 spectral method (hero-4λ, J&H uplift, light-aware pdf ∝ CMF·E) matches
 known practice and is very close to Peters' 2025 tracer. The novel contribution, if any, would be

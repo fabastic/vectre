@@ -249,6 +249,24 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
     where the J&H uplift error dominates (measured-spectra mode 0.71).
   * These are known techniques; nothing here is claimed as new.
 
+## 2026-10-11: survey update (SURVEY.md category 8, gap e)
+
+* Research only (web search, page fetches, GitHub API); nothing run, nothing copied, nobody contacted. (E)
+* **Correction:** "indicatrix-web: none found" was wrong. A GitHub repository search found
+  `suitable-name/indicatrix` (MIT; spectral gem tracer with 8-channel hero wavelength). Its
+  `apps/indicatrix-web` build is CPU/WASM in the browser; per its README there is no browser GPU path.
+* **Uplift metamerism under non-D65 is well studied (prior art, S):** constrained uplifting (Tódová,
+  Wilkie, Fascione 2021/2022), multi-illuminant and indirect-light constraints (van de Ruit & Eisemann
+  2023/2024; code GPL-3.0), one-to-many upsampling (Belcour et al. 2023), and learned upsamplers with
+  ΔE2000 under FL11 and LEDs (Yu et al., arXiv 2602.18741: J&H mean 2.91 under FL11 via their codec
+  route). Vectre's Phase 2 F11 finding (uplift error dominates) is consistent with this literature
+  and is **not new**.
+* **Possible contribution (P, packaging/measurement, not method):** an open, permissively
+  licensed, renderer-level benchmark separating renderer error from uplift error (RGB / uplifted /
+  measured spectra) under F-series, LED and narrow-band lights, usable from the browser.
+* Gap (d) wording updated: Vectre's browser measurement exists only privately and only on the Intel
+  iGPU.
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).
