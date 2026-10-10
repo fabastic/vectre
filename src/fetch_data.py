@@ -30,6 +30,22 @@ FILES = [
     ("cie/CIE_std_illum_D65.csv",
      "https://files.cie.co.at/Publications-datasets/CIE_std_illum_D65.csv",
      "03d4eb9b837c60671627c946fb534deb"),
+    # Phase 1.5 (Task A): illuminant A. NOTE: the CIE web page lists MD5
+    # 6c33a1c3...; the file served on 2026-10-10 matches the MD5/SHA-256 in its
+    # own metadata revision 2 (below) and its published column-sum validation.
+    ("cie/CIE_std_illum_A_1nm.csv",
+     "https://files.cie.co.at/Publications-datasets/CIE_std_illum_A_1nm.csv",
+     "ed0e4effb55d82b950c0912b6278a9d1"),
+    ("cie/CIE_std_illum_A_1nm.csv_metadata_v2.json",
+     "https://files.cie.co.at/Publications-datasets/CIE_std_illum_A_1nm.csv_metadata_v2.json", None),
+    # FL1..FL12, FL3.1..FL3.15 (CIE 015:2018 tables 10.1-10.3), DOI 10.25039/CIE.DS.54hy6srn
+    ("cie/CIE_illum_FLs_1nm.csv",
+     "https://files.cie.co.at/Publications-datasets/CIE_illum_FLs_1nm.csv",
+     "77df774b47c2de724211d5f26592759e"),
+    # Task B: CIE 224:2017 99 colour evaluation samples, 1 nm, DOI 10.25039/CIE.DS.8svs5rqd
+    ("cie/CIE_srf_cfi_1nm.csv",
+     "https://files.cie.co.at/Publications-datasets/CIE_srf_cfi_1nm.csv",
+     "5f8f0b2e6a30a8630bda424b85a1806d"),
     ("munsell_uef/munsell380_800_1.asc.gz",
      "https://zenodo.org/records/3269912/files/munsell380_800_1.asc.gz?download=1",
      "0889e8b580c23589ae6cb89f9f4035e5"),

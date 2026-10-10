@@ -23,6 +23,12 @@ src/
   multiplication.py      product tensor, DMR, colour matrix
   eval_multiplication.py Steps 4-5: bounces, baselines, plots, tables
   export.py              Step 6: .bin + .json for WebGPU, with read-back verification
+  spectral1nm.py         Phase 1.5: 1 nm truth colorimetry, CIE A/F2/F11 + synthetic line lights
+  eval_illuminants.py    Phase 1.5 A: per-illuminant bounce errors + tonemap sweep
+  synthetic_spectra.py   Phase 1.5 B: Jakob-Hanika / GP generators, CIE 99 CES loader
+  eval_shippable_basis.py Phase 1.5 B: shippable bases vs Munsell basis
+  bench_accumulation.py  Phase 1.5 C: path-loop cost (analytic + CPU timing)
+  eval_hybrid4.py        Phase 1.5 C: hybrid accuracy + light-aware hero4 check
 tests/           colorimetry (Sharma pairs, colour-science cross-check), loaders
 results/         json results, markdown tables, figures/, export/, pca/
 ```
@@ -40,6 +46,10 @@ python src/pca.py
 python src/eval_reconstruction.py
 python src/eval_multiplication.py
 python src/export.py
+python src/eval_illuminants.py
+python src/eval_shippable_basis.py
+python src/bench_accumulation.py
+python src/eval_hybrid4.py
 ```
 
-All randomness is seeded. The full pipeline runs in under a minute on a laptop CPU.
+All randomness is seeded. The full pipeline runs in a few minutes on a laptop CPU. Tests: `python tests/test_*.py` (each file runs standalone).

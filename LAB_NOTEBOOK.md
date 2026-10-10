@@ -90,8 +90,71 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
 * **Exported:** raw basis/mean/tensor/colour matrices (XYZ and linear sRGB) and log basis/mean.
   The Phase 2 choice between them is pending.
 
+## 2026-10-10: Phase 1.5, Task A (illuminants)
+
+* **ECOSTRESS still absent.** Task B is run without it, as the brief allows.
+* **CIE A, F2, F11 from official CIE CSVs.** F-series = columns FL2 and FL11 of
+  `CIE_illum_FLs_1nm.csv`. The **illuminant A MD5 on the CIE web page does not match the served
+  file**; the file matches its own metadata v2 MD5/SHA-256 and the published column-sum
+  validation, so I accepted it and documented the discrepancy. (S)
+* **Ground truth moved to 1 nm** for illuminant tests. A 5 nm grid cannot represent a 5 nm-FWHM
+  line. Native 1 nm Munsell data is used; PCA methods stay on 5 nm and are integrated through
+  1 nm CMF·E weights folded by linear interpolation. Measured: uncompressed 5 nm vs 1 nm truth
+  ≤ 0.14 ΔE, so the grid is not the bottleneck for these (smooth) reflectances. (E)
+* **NEONLIKE is synthetic.** The NIST ASD lines endpoint returned input/software errors to
+  scripted queries, and I didn't type real Ne lines from memory. 14 Gaussian lines (FWHM
+  1 nm) at seeded-random positions in 580–710 nm. Labelled as not real neon everywhere. (E)
+* **Lights normalised to white-reflector Y=100; CIELAB always relative to the D65 white**
+  ("display as rendered", no white balance/CAT). This choice penalises nothing in particular
+  but makes non-D65 scenes look tinted, which is what a renderer outputs without white
+  balance. (E)
+* **RGB pipeline = standard practice:** albedo is linear sRGB under D65, light is linear sRGB
+  of its XYZ, per-channel product. As analysed by Meng et al. 2015. (S)
+* **Fixed 4λ generalised** with Qᵢ = Wᵢ / E_D65(λᵢ), so it is light-independent. (E)
+* **Hero-4λ pdf.** The main tables use a light-agnostic pdf ∝ Σ CMF. A **light-aware** pdf
+  ∝ Σ CMF · E was added as a fairness check after seeing the line-spectrum results; it is known
+  practice (wavelength importance sampling). It turned out to be decisive for the verdict:
+  NB610 0.10 at 16 spp. (S)
+* **Tonemapper = per-channel Reinhard on clipped linear sRGB**, applied identically to truth and
+  methods. Intensities 1x/10x/100x of white-reflector Y=1. Only one tonemapper was tested. (E)
+* Finding: the "RGB colour purity collapse" is reproduced, but it comes from the tonemapper and
+  affects truth equally (D65 100x: chroma 4.7 for both). It is not RGB-specific.
+
+## 2026-10-10: Phase 1.5, Task B (shippable basis)
+
+* **Sources checked:** ECOSTRESS (absent; all rights reserved), USGS splib07 (public domain,
+  but ScienceBase served a Cloudflare challenge, which I didn't bypass), CIE 224 99 CES (CC
+  BY-SA 4.0, fetched and verified).
+* **Jakob & Hanika 2019 sigmoid-quadratic generator** (their S(z) = ½ + z/(2√(1+z²))). (S) The
+  first Adam fit was poor (mean ΔE76 6.6, 35% > 1). I replaced it with batched LM plus restarts:
+  residual < 1e-13 for all 5000 targets. Targets uniform in the *encoded* sRGB cube (my choice). (E)
+* **GP-smooth generator:** sigmoid of an SE-kernel GP; length-scale 25–90 nm, amplitude 0.5–2.5,
+  mean −3..1. These ranges are arbitrary. (E)
+* **Balanced weighted PCA** (equal total weight per source). My first union run let 10 000
+  synthetic spectra swamp 99 measured ones. (E)
+* **Test = 247 held-out Munsell chips** (research use for evaluation only). One CIE-99 sample is
+  within 0.004 RMSE of a test chip, which I noted as minor contamination. (E)
+
+## 2026-10-10: Phase 1.5, Task C (accumulation cost)
+
+* **Benchmark design:** vectorised torch, float32, 2^18 paths × 5 bounces, one emission event per
+  bounce, scatter-add to a 256² image. Material ids are precomputed so RNG isn't timed. CPU-only,
+  indicative. (E)
+* **hero-4λ evaluates reflectance via Jakob–Hanika coefficients** (3 floats per material), the
+  usual way to get spectra from RGB textures. (S)
+* **FLOP counting convention:** FMA = 2, exp counted separately, rsqrt counted as 1. (E)
+* **Hybrid (log-PCA throughput, 4λ accumulation)** evaluated for accuracy as well as cost. It is
+  strictly worse than hero-4λ on true spectra (noise + bias). (E)
+* **Verdict recorded in RESULTS.md: pivot.** Make hero-4λ + J&H uplift + light-aware wavelength
+  sampling the WebGPU baseline; test log-PCA only in the 1–4 spp + denoiser regime. That regime
+  is a **hypothesis, not measured**.
+* **Novelty status unchanged:** log-PCA multiplicative closure is still "P, literature check
+  needed". Nothing in Phase 1.5 is claimed as novel; all baselines are known techniques.
+
 ## Open questions for the user
 
-1. Coverage policy for ECOSTRESS, once counts are available.
-2. Whether to add illuminant-change experiments (strongly recommended before drawing conclusions vs RGB).
-3. Whether log-PCA, a hybrid, or another representation should be the Phase 2 target.
+1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).
+2. ~~Illuminant-change experiments~~ done in Phase 1.5 (Task A).
+3. Phase 2 target: recommendation is to pivot to hero-4λ + light-aware sampling as the
+   baseline, with log-PCA tested only at 1–4 spp + denoiser. Needs your decision.
+4. Whether to download USGS splib07 (public domain) manually as a second shippable measured set.

@@ -1,0 +1,66 @@
+{
+ "config": {
+  "N_paths": 262144,
+  "bounces": 5,
+  "materials": 1024,
+  "pixels": 65536,
+  "dtype": "float32",
+  "threads": 10,
+  "torch": "2.14.1+cpu",
+  "note": "CPU-only, vectorised torch; indicative, not a GPU prediction"
+ },
+ "results": {
+  "rgb": {
+   "state_bytes": 24,
+   "fetch_bytes": 12,
+   "flops": 9,
+   "exp": 0,
+   "per_path_end_flops": 0,
+   "ns_per_path_bounce_cpu": 4.552612309360882
+  },
+  "hero4_jh": {
+   "state_bytes": 36,
+   "fetch_bytes": 28,
+   "flops": 52,
+   "exp": 0,
+   "per_path_end_flops": 24,
+   "ns_per_path_bounce_cpu": 22.694549561830257
+  },
+  "logpca_K4": {
+   "state_bytes": 32,
+   "fetch_bytes": 16,
+   "flops": 1303,
+   "exp": 81,
+   "constant_bytes_read": 2592,
+   "per_path_end_flops": 0,
+   "ns_per_path_bounce_cpu": 144.77142333824133
+  },
+  "logpca_K6": {
+   "state_bytes": 40,
+   "fetch_bytes": 24,
+   "flops": 1629,
+   "exp": 81,
+   "constant_bytes_read": 3240,
+   "per_path_end_flops": 0,
+   "ns_per_path_bounce_cpu": 145.97091674284357
+  },
+  "hybrid4_K4": {
+   "state_bytes": 40,
+   "fetch_bytes": 32,
+   "flops": 48,
+   "exp": 4,
+   "constant_bytes_read": 80,
+   "per_path_end_flops": 24,
+   "ns_per_path_bounce_cpu": 41.36558532374934
+  },
+  "hybrid4_K6": {
+   "state_bytes": 48,
+   "fetch_bytes": 40,
+   "flops": 66,
+   "exp": 4,
+   "constant_bytes_read": 112,
+   "per_path_end_flops": 24,
+   "ns_per_path_bounce_cpu": 47.17849730884183
+  }
+ }
+}
