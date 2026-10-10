@@ -4,8 +4,22 @@
     {
       "name": "webgpu",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["src/webgpu/serve.py", "--port", "8766"],
+      "runtimeArgs": [
+        "src/webgpu/serve.py",
+        "--port",
+        "8766"
+      ],
       "port": 8766
+    },
+    {
+      "name": "spectrack-webgpu",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "../spectrack/examples/webgpu/serve.py",
+        "--port",
+        "8767"
+      ],
+      "port": 8767
     }
   ]
 }
