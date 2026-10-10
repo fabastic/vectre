@@ -6,3 +6,8 @@ __pycache__/
 # Re-fetch with `python src/fetch_data.py`; see data/README.md.
 data/raw/
 data/processed/
+# Phase 2: large intermediates (regenerable). The browser-facing reference
+# images in src/webgpu/data/ ARE committed so the demo runs without a 1 h CPU render.
+results/phase2/ref_*.npz
+results/phase2/gpu/*.bin
+node_modules/

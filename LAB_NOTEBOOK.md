@@ -151,6 +151,62 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
 * **Novelty status unchanged:** log-PCA multiplicative closure is still "P, literature check
   needed". Nothing in Phase 1.5 is claimed as novel; all baselines are known techniques.
 
+## 2026-10-10: Phase 2, Task 0 (tonemapper check)
+
+* **Two extra tonemappers:** max-RGB Reinhard (scales the colour by m/(1+m)/m, m = max channel;
+  keeps channel ratios exactly, after clipping negatives) and an Oklch operator (Reinhard on
+  luminance; Oklab L' = cbrt(Y'); keeps C/L and hue; bisection-reduces chroma to fit the sRGB
+  gamut). Exact formulas are in `src/tonemap.py`. Both are standard ideas (max-RGB/"ratio-preserving"
+  tonemapping; Oklab, Ottosson 2020). Oklab constants were verified against colour-science. (S)
+* **Hue shift is measured against the scene-linear truth hue** (CIELAB h_ab, D65 white), only for
+  samples with scene chroma > 10 to avoid noisy greys. (E)
+* Finding: with max-RGB, RGB's display chroma is 0.96–1.07x the truth's. No RGB-specific purity
+  loss remains; RGB's error is hue/lightness (ΔE 1.6–6.2 vs truth after tonemapping).
+
+## 2026-10-10: Phase 2, Task 1 (CPU reference)
+
+* **Python + Numba** (no Rust/C++ toolchain installed). Code is independent of the WGSL; only the
+  scene JSON is shared. (E)
+* **Scene materials = measured CIE 224:2017 CES spectra** (CC BY-SA 4.0), picked as nearest in
+  CIELAB to classic Cornell-box target colours (CES 60/11/46/78/29/97 for
+  white/red/green/blue/yellow/magenta). The GPU spectral mode only sees their sRGB albedo + J&H
+  uplift, so uplift error is part of the comparison, as for RGB-authored assets. (E)
+* **Integrator contract**: ≤ 5 scattering vertices, NEE at every vertex, emission from BSDF hits only at
+  depth 0, cosine sampling, no Russian roulette. This is standard; it is identical in both renderers so
+  truncation bias is shared. (S)
+* **Reference spectral estimator**: 8 stratified wavelengths per path from a light-aware pdf on the
+  1 nm grid. It is unbiased; tests check it against full 401-wavelength integration (agreement < 2%). (S)
+* **Tests**: white furnace (closed cube, every surface emits; exact Σρᵏ, to 1e-12), analytic
+  point-to-rectangle form factor (formula checked against scipy quadrature to 1e-10; NEE within
+  0.5%, pure PT within 2%), NEE vs pure path tracing on the Cornell scene, and sampled vs full
+  spectrum. (S)
+* **Resolution 512², 8192 spp reference** (≈ 18 min/scene on 16 CPU threads). Half-split noise is
+  reported per scene. (E)
+* **Exposure for all metrics/images**: reference median non-emitter Y → 18 (white = 100); the
+  emitter pixels are excluded from metrics. (E)
+
+## 2026-10-10: Phase 2, Task 2 (WebGPU)
+
+* **J&H uplift**: own implementation of the published method (Jakob & Hanika 2019); the reference code
+  `mitsuba-renderer/rgb2spec` is **BSD-3-Clause** (checked via the GitHub API) but was **not used**.
+  The LUT is 32³ over linear sRGB [0,1]³ (simpler than their max-channel parametrisation), fitted
+  by LM with continuation from mid-grey outward, and trilinear in coefficients. All grid
+  points fit to < 5e-7 ΔE76. Interpolated random colours: mean 0.05, p95 0.15, max 2.5 ΔE00
+  (worst near gamut corners). (S method / E parametrisation)
+* **Hero-4λ** (Wilkie et al. 2014) with **light-aware wavelength pdf** ∝ (x̄+ȳ+z̄)·E on the 1 nm
+  grid, inverse-CDF binary search, stratified u + i/4. These are known techniques. (S)
+* **RGB light colour** = linear sRGB of the light's XYZ, **negatives kept** (NB610 → (73.6, −0.77,
+  −1.39)). This is consistent with Phase 1.5; clamping would be an artist choice. (E)
+* **Mode 2 (measured spectra on GPU)** was added for validation, to separate renderer bugs from
+  uplift error. It is not part of the RGB-vs-spectral comparison. (E)
+* **Timing**: timestamp queries around each compute pass (4 spp per dispatch), summed. A warm-up
+  render precedes each mode. Memory = bytes of buffers the mode reads. (E)
+* **Adapter caveat**: in this environment Chrome exposed the **Intel integrated GPU** (gen-12lp), not
+  the RTX 4060, so all GPU numbers I report are from that iGPU. (E)
+* **WGSL validation**: compiled via Chrome's WebGPU (`getCompilationInfo`: no messages). No standalone
+  naga/tint was available. Constants and LUT layout are cross-checked against Python in
+  `tests/test_webgpu_static.py`. Metrics JS is tested in Node against the Sharma pairs.
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).

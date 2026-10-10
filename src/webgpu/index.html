@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vectre: RGB vs hero-4λ</title>
+<style>
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; background: #111; color: #ddd; }
+  canvas { width: 512px; height: 512px; image-rendering: pixelated; background: #000; display: block; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  select, button { font: inherit; }
+  pre { background: #1b1b1b; padding: 8px; max-height: 260px; overflow: auto; white-space: pre-wrap; }
+  .warn { color: #f99; }
+</style>
+</head>
+<body>
+<h3>Vectre Phase 2: RGB vs spectral hero-4λ (Cornell box)</h3>
+<div class="row">
+  <label>Scene <select id="scene"></select></label>
+  <label>Mode <select id="mode">
+    <option value="0">RGB</option>
+    <option value="1" selected>Spectral hero-4λ (Jakob–Hanika uplift)</option>
+    <option value="2">Spectral hero-4λ (measured spectra; validation)</option></select></label>
+  <label>spp <select id="spp"><option>1</option><option>4</option><option selected>16</option><option>64</option><option>256</option><option>1024</option></select></label>
+  <label>Tonemap <select id="tm">
+    <option value="2" selected>max-RGB (hue-preserving)</option>
+    <option value="3">Oklch chroma-preserving</option>
+    <option value="1">per-channel Reinhard</option>
+    <option value="0">clip</option></select></label>
+  <button id="go">Render</button>
+</div>
+<div class="row">
+  <button id="bench">Run benchmark (all scenes × modes × spp)</button>
+  <button id="dljson" disabled>Download results.json</button>
+  <button id="dlcsv" disabled>Download results.csv</button>
+</div>
+<canvas id="c" width="512" height="512"></canvas>
+<pre id="log"></pre>
+<script type="module">
+import { Renderer } from "./renderer.js";
+import { runHarness, download } from "./harness.js";
+import { exposureFromRef, toCSV } from "./metrics.js";
+
+const $ = (id) => document.getElementById(id);
+const logEl = $("log");
+const log = (s) => { logEl.textContent += s + "\n"; logEl.scrollTop = 1e9; console.log(s); };
+const r = new Renderer();
+window.VECTRE = { r };
+const exposures = {};
+async function exposureFor(scene) {
+  if (!exposures[scene]) {
+    const ref = new Float32Array(await (await fetch(`data/ref_${scene}_xyz.bin`)).arrayBuffer());
+    const mask = new Uint8Array(await (await fetch(`data/ref_${scene}_mask.bin`)).arrayBuffer());
+    exposures[scene] = exposureFromRef(ref, mask);
+  }
+  return exposures[scene];
+}
+try {
+  await r.init($("c"));
+  log(`adapter: ${JSON.stringify(r.info)} timestamp-query: ${r.hasTimestamps}`);
+  log(`WGSL compile messages: ${JSON.stringify(r.compileInfo)}`);
+  for (const s of Object.keys(r.scene.scenes)) $("scene").add(new Option(`${s} (${r.scene.scenes[s].light})`, s));
+} catch (e) { log("INIT FAILED: " + e); logEl.className = "warn"; window.VECTRE.error = String(e); throw e; }
+
+async function renderOne() {
+  const scene = $("scene").value, mode = +$("mode").value, spp = +$("spp").value;
+  r.setScene(scene);
+  const t = await r.render(mode, spp, 1234);
+  r.display(+$("tm").value, await exposureFor(scene));
+  log(`${scene} mode=${mode} spp=${spp}: gpu ${t.gpuMs?.toFixed(2) ?? "n/a"} ms, wall ${t.wallMs.toFixed(1)} ms`);
+}
+$("go").onclick = renderOne;
+$("tm").onchange = async () => r.display(+$("tm").value, await exposureFor($("scene").value));
+$("bench").onclick = async () => {
+  $("bench").disabled = true;
+  const res = await runHarness(r, { log });
+  window.VECTRE.results = res;
+  $("dljson").disabled = $("dlcsv").disabled = false;
+  $("dljson").onclick = () => download("vectre_results.json", JSON.stringify(res, null, 1), "application/json");
+  $("dlcsv").onclick = () => download("vectre_results.csv", toCSV(res.rows), "text/csv");
+  log("benchmark done");
+  $("bench").disabled = false;
+};
+window.VECTRE.ready = true;
+if (new URLSearchParams(location.search).has("auto")) $("bench").click(); else renderOne();
+</script>
+</body>
+</html>

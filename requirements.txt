@@ -6,3 +6,4 @@ scipy>=1.13
 matplotlib>=3.9
 # Used ONLY in tests as an independent cross-check of our colorimetry.
 colour-science>=0.4.4
+numba>=0.60          # Phase 2 CPU reference path tracer

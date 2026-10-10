@@ -1,0 +1,114 @@
+{
+ "meta": {
+  "date": "2026-10-10T14:20:15.545Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.31226.1 Chrome/152.0.7977.130 Safari/537.36 MSIX",
+  "adapter": {
+   "vendor": "intel",
+   "architecture": "gen-12lp",
+   "device": "",
+   "description": ""
+  },
+  "timestampQuery": true,
+  "resolution": 512,
+  "maxBounces": 5,
+  "seed": 1234,
+  "chunk": 4,
+  "timing_note": "gpu_ms = sum of compute-pass timestamp deltas",
+  "compileInfo": {
+   "pt.wgsl": [],
+   "display.wgsl": []
+  }
+ },
+ "rows": [
+  {
+   "scene": "cornell_d65",
+   "mode": "rgb",
+   "spp": 1,
+   "gpu_ms": 3.997696,
+   "wall_ms": 16.299999997019768,
+   "gpu_ms_per_spp": 3.997696,
+   "dispatches": 1,
+   "buffer_bytes": 4195008,
+   "rmse": 0.47965809582312063,
+   "mean_dE00": 11.256878701122131,
+   "median_dE00": 8.471968202593395,
+   "p95_dE00": 33.080997883585646,
+   "exposure": 334.0727527237486
+  },
+  {
+   "scene": "cornell_d65",
+   "mode": "rgb",
+   "spp": 4,
+   "gpu_ms": 40.96,
+   "wall_ms": 48.70000000298023,
+   "gpu_ms_per_spp": 10.24,
+   "dispatches": 1,
+   "buffer_bytes": 4195008,
+   "rmse": 0.22769397255323737,
+   "mean_dE00": 6.516401158534819,
+   "median_dE00": 4.6740365361097425,
+   "p95_dE00": 20.356786098107218,
+   "exposure": 334.0727527237486
+  },
+  {
+   "scene": "cornell_d65",
+   "mode": "hero4_jh",
+   "spp": 1,
+   "gpu_ms": 5.373952,
+   "wall_ms": 13.900000005960464,
+   "gpu_ms_per_spp": 5.373952,
+   "dispatches": 1,
+   "buffer_bytes": 4732128,
+   "rmse": 0.4375330822251886,
+   "mean_dE00": 15.876977150377185,
+   "median_dE00": 15.551964579057616,
+   "p95_dE00": 34.58885237247574,
+   "exposure": 334.0727527237486
+  },
+  {
+   "scene": "cornell_d65",
+   "mode": "hero4_jh",
+   "spp": 4,
+   "gpu_ms": 30.212096,
+   "wall_ms": 41.599999994039536,
+   "gpu_ms_per_spp": 7.553024,
+   "dispatches": 1,
+   "buffer_bytes": 4732128,
+   "rmse": 0.23936895549187498,
+   "mean_dE00": 9.36897994626279,
+   "median_dE00": 7.953556440085962,
+   "p95_dE00": 23.651558100398745,
+   "exposure": 334.0727527237486
+  },
+  {
+   "scene": "cornell_d65",
+   "mode": "hero4_measured",
+   "spp": 1,
+   "gpu_ms": 5.177344,
+   "wall_ms": 13.799999997019768,
+   "gpu_ms_per_spp": 5.177344,
+   "dispatches": 1,
+   "buffer_bytes": 4217472,
+   "rmse": 0.43742419088385726,
+   "mean_dE00": 15.455703567459958,
+   "median_dE00": 14.80227636417225,
+   "p95_dE00": 34.49981165278772,
+   "exposure": 334.0727527237486
+  },
+  {
+   "scene": "cornell_d65",
+   "mode": "hero4_measured",
+   "spp": 4,
+   "gpu_ms": 30.212096,
+   "wall_ms": 41.599999994039536,
+   "gpu_ms_per_spp": 7.553024,
+   "dispatches": 1,
+   "buffer_bytes": 4217472,
+   "rmse": 0.2393415525706336,
+   "mean_dE00": 9.336115399781864,
+   "median_dE00": 7.714329547123997,
+   "p95_dE00": 24.078630710362603,
+   "exposure": 334.0727527237486
+  }
+ ]
+}

@@ -29,7 +29,12 @@ src/
   eval_shippable_basis.py Phase 1.5 B: shippable bases vs Munsell basis
   bench_accumulation.py  Phase 1.5 C: path-loop cost (analytic + CPU timing)
   eval_hybrid4.py        Phase 1.5 C: hybrid accuracy + light-aware hero4 check
-tests/           colorimetry (Sharma pairs, colour-science cross-check), loaders
+  tonemap.py, eval_tonemap.py   Phase 2 Task 0: tonemapper control
+  phase2_scene.py        Phase 2: shared Cornell scene, CES materials, lights, J&H LUT
+  cpu_reference/         Phase 2 Task 1: Numba spectral reference path tracer
+  webgpu/                Phase 2 Task 2: WebGPU RGB / hero-4λ renderer + harness (see its README)
+  phase2_report.py       Phase 2: tables + side-by-side images from harness output
+tests/           Python tests (colorimetry, loaders, CPU reference, WGSL constants); tests/js/ Node tests
 results/         json results, markdown tables, figures/, export/, pca/
 ```
 
@@ -50,6 +55,12 @@ python src/eval_illuminants.py
 python src/eval_shippable_basis.py
 python src/bench_accumulation.py
 python src/eval_hybrid4.py
+python src/eval_tonemap.py
+python src/phase2_scene.py                       # scene + J&H LUT (cached)
+python src/cpu_reference/render_reference.py     # ~1 h on 16 threads (8192 spp, 3 scenes)
+python src/webgpu/serve.py                       # then open http://localhost:8765/?auto=1
+python src/phase2_report.py
+node --test tests/js/metrics.test.mjs
 ```
 
 All randomness is seeded. The full pipeline runs in a few minutes on a laptop CPU. Tests: `python tests/test_*.py` (each file runs standalone).

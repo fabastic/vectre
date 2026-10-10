@@ -1,0 +1,2 @@
+[21:21:01] cornell_nb610 chunk 1/16 (512 spp) 30.3s; total 30s; avg cores busy 11.1
+[21:21:31] cornell_nb610 chunk 2/16 (512 spp) 29.7s; total 60s; avg cores busy 12.3
