@@ -267,6 +267,34 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
 * Gap (d) wording updated: Vectre's browser measurement exists only privately and only on the Intel
   iGPU.
 
+## 2026-10-11: release repo `spectrack` created (private)
+
+* **New private repo `FABASTIC/spectrack`**, fresh history (first commit 22617a7); vectre history was
+  not copied and vectre stays private. Visibility verified as PRIVATE after creation. (E)
+* **Source:** files copied from the vectre working tree on branch `patent-track` at aacf142, whose shared
+  files equal `main` at 44c99dc. Patent-track documents (PREREG, PRIORART, PATENT_TRACK) were excluded.
+  Only the oracle measurement (`results/patent/gate.json` → `results/oracle_vs_hero4.json`, with an
+  adapted script) went in, described as a measurement. (E)
+* **Licence audit (shown to and approved by the user before copying):**
+  * code MIT;
+  * CIE data and all derived bench data, references, results and figures CC BY-SA 4.0;
+  * prose docs CC BY 4.0;
+  * Sharma test data downloaded at test time, not redistributed;
+  * Jakob–Hanika BSD-3 code and GPL code not used.
+  * Exact CIE citations are in ATTRIBUTION.md.
+* **Exclusions:** Munsell/UEF and ECOSTRESS and everything derived from them, including the Task 0
+  tonemapper numbers, which used Munsell spectra (the tonemap code and test are kept); Phase 1/1.5;
+  PCA bases and exports; smoke-test outputs. A grep of the clone for these names: 0 hits. (E)
+* **New in spectrack:** `score.py` (scorer CLI, per-material breakdown via first-hit material maps),
+  `docs/SCENE_SPEC.md`, `docs/SUBMITTING.md`, an RGB example submission, tests for the scorer, scene
+  rebuild and data checksums, and `.gitattributes` keeping the CIE CSVs byte-identical.
+* **Cross-checks measured:**
+  * The RGB example (Numba integrator, 3 channels) scores 1.971 / 3.243 / 4.771, matching the WebGPU
+    RGB 64-spp numbers 1.97 / 3.24 / 4.77.
+  * The Python scorer reproduces the browser harness's JS metric on the same 1024-spp images.
+* **Verification in a fresh clone with a fresh venv:** 25/25 pytest, 9/9 node tests, quickstart
+  example OK. No discrete-GPU numbers yet (README says pending).
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).
