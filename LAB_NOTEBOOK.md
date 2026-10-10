@@ -207,6 +207,22 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
   naga/tint was available. Constants and LUT layout are cross-checked against Python in
   `tests/test_webgpu_static.py`. Metrics JS is tested in Node against the Sharma pairs.
 
+## 2026-10-10: community survey (SURVEY.md)
+
+* Research only: web search, page fetches, GitHub API for licences and last activity. No code was copied
+  and nothing was run. Unconfirmed items are marked "not verified"; absence claims are stated as "none
+  found in N searches". (E)
+* **Prior art affecting novelty claims:** Peters' 2025 spectral path tracer (MomentsInGraphics,
+  BSD-3) already uses 4 wavelengths per path with importance sampling ∝ ‖CMF‖₁·illuminant and
+  Fourier sRGB uplift. It reports native RTX 5070 Ti timings (spectral overhead ≤ 0.3 ms) and an
+  RGB-vs-spectral comparison under 8 measured lights. Vectre's Phase 2 spectral method is therefore
+  standard (S), not novel.
+* Gaps found: (a) open RGB-vs-spectral bench with independent references: partly covered;
+  (b) plain-language interactive explainer: open; (c) web-ready permissive uplift generator:
+  partly covered (native BSD-3 tools only); (d) browser cost measurements: open. These are
+  candidate contributions (P for packaging/measurement, not method).
+* Spectral Cycles: confirmed not in Blender 5.0 release notes; devtalk thread active (last post 2026-10-10).
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).

@@ -1,2 +1,35 @@
 [21:21:01] cornell_nb610 chunk 1/16 (512 spp) 30.3s; total 30s; avg cores busy 11.1
 [21:21:31] cornell_nb610 chunk 2/16 (512 spp) 29.7s; total 60s; avg cores busy 12.3
+[21:22:01] cornell_nb610 chunk 3/16 (512 spp) 30.2s; total 90s; avg cores busy 12.7
+[21:22:31] cornell_nb610 chunk 4/16 (512 spp) 30.6s; total 121s; avg cores busy 12.8
+[21:23:00] cornell_nb610 chunk 5/16 (512 spp) 28.3s; total 149s; avg cores busy 13.1
+[21:23:28] cornell_nb610 chunk 6/16 (512 spp) 28.0s; total 177s; avg cores busy 13.3
+[21:23:56] cornell_nb610 chunk 7/16 (512 spp) 28.1s; total 205s; avg cores busy 13.4
+[21:24:25] cornell_nb610 chunk 8/16 (512 spp) 28.8s; total 234s; avg cores busy 13.5
+[21:24:52] cornell_nb610 chunk 9/16 (512 spp) 27.4s; total 262s; avg cores busy 13.6
+[21:25:22] cornell_nb610 chunk 10/16 (512 spp) 30.2s; total 292s; avg cores busy 13.6
+[21:25:51] cornell_nb610 chunk 11/16 (512 spp) 28.7s; total 320s; avg cores busy 13.6
+[21:26:22] cornell_nb610 chunk 12/16 (512 spp) 30.7s; total 351s; avg cores busy 13.6
+[21:26:50] cornell_nb610 chunk 13/16 (512 spp) 28.8s; total 380s; avg cores busy 13.6
+[21:27:18] cornell_nb610 chunk 14/16 (512 spp) 27.9s; total 408s; avg cores busy 13.6
+[21:27:46] cornell_nb610 chunk 15/16 (512 spp) 27.5s; total 435s; avg cores busy 13.7
+[21:28:14] cornell_nb610 chunk 16/16 (512 spp) 27.9s; total 463s; avg cores busy 13.7
+cornell_nb610: 512x512 spp=8192 nw=8 463.2s exposure=282.6051 half-split noise (Y, rel. to white=1, std of full mean)=0.00411
+[21:28:44] cornell_f11 chunk 1/16 (512 spp) 29.7s; total 30s; avg cores busy 13.9
+[21:29:15] cornell_f11 chunk 2/16 (512 spp) 31.1s; total 61s; avg cores busy 13.9
+[21:29:46] cornell_f11 chunk 3/16 (512 spp) 30.8s; total 92s; avg cores busy 14.0
+[21:30:18] cornell_f11 chunk 4/16 (512 spp) 31.6s; total 123s; avg cores busy 14.0
+[21:30:55] cornell_f11 chunk 5/16 (512 spp) 37.6s; total 161s; avg cores busy 13.6
+[21:32:18] cornell_f11 chunk 6/16 (512 spp) 82.5s; total 243s; avg cores busy 10.5
+[21:32:54] cornell_f11 chunk 7/16 (512 spp) 36.7s; total 280s; avg cores busy 10.7
+[21:33:28] cornell_f11 chunk 8/16 (512 spp) 33.4s; total 313s; avg cores busy 10.9
+[21:34:04] cornell_f11 chunk 9/16 (512 spp) 36.4s; total 350s; avg cores busy 11.0
+[21:34:36] cornell_f11 chunk 10/16 (512 spp) 31.4s; total 381s; avg cores busy 11.3
+[21:35:07] cornell_f11 chunk 11/16 (512 spp) 31.3s; total 412s; avg cores busy 11.5
+[21:35:38] cornell_f11 chunk 12/16 (512 spp) 30.9s; total 443s; avg cores busy 11.7
+[21:36:08] cornell_f11 chunk 13/16 (512 spp) 30.1s; total 473s; avg cores busy 11.8
+[21:36:39] cornell_f11 chunk 14/16 (512 spp) 31.2s; total 505s; avg cores busy 12.0
+[21:37:09] cornell_f11 chunk 15/16 (512 spp) 30.2s; total 535s; avg cores busy 12.1
+[21:37:39] cornell_f11 chunk 16/16 (512 spp) 30.1s; total 565s; avg cores busy 12.2
+cornell_f11: 512x512 spp=8192 nw=8 565.0s exposure=335.6040 half-split noise (Y, rel. to white=1, std of full mean)=0.00488
+EXIT 0
