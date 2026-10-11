@@ -295,6 +295,24 @@ practice; P = possibly novel and needs a literature check; E = evaluation choice
 * **Verification in a fresh clone with a fresh venv:** 25/25 pytest, 9/9 node tests, quickstart
   example OK. No discrete-GPU numbers yet (README says pending).
 
+## 2026-10-11: release repo recreated with a clean history (`spectrack-clean`)
+
+* **New private repo `FABASTIC/spectrack-clean`**: a single orphan commit (`200031e`) whose tree is the
+  `audit` branch of the old `spectrack` repo. No git history was carried over: one branch (`main`), no
+  tags. Author and committer are the owner's GitHub no-reply address (set in the repo's local git
+  config only). Visibility verified PRIVATE after the push. (E)
+* **Why:** the old history contained the owner's personal email as author and a full browser
+  user-agent string that identified the embedding application. A fresh root commit removes both;
+  rewriting authors alone would have kept the user agent in history.
+* **Only content difference from `audit`:** AUDIT.md, which had quoted those details. They are
+  redacted, with a note at the top; findings and verdicts are unchanged.
+* **Pre-push checks:** author/committer list, a grep of the tree, full history and commit messages for
+  the personal email, "gmail", the app identifier, Windows user-profile paths and the old commit id
+  (no hits), one branch and no tags. The owner approved the push.
+* **Still to do by the owner:** delete the old `FABASTIC/spectrack` repo (all of its branches carry the old
+  history), then optionally rename `spectrack-clean` to `spectrack`. The global git config on this
+  machine still uses the personal email for other repos.
+
 ## Open questions for the user
 
 1. Coverage policy for ECOSTRESS, once counts are available (still not supplied).
